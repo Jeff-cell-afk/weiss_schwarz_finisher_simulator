@@ -23,7 +23,7 @@ class GameSystem:
         self.initial_main_count = len(main_deck)
         self.initial_trigger_count = len(trigger_deck)
 
-    def _reveal_trigger_card(self) -> Optional[Card]:
+    def reveal_trigger_card(self) -> Optional[Card]:
         if not self.trigger_deck:
             if not self.trigger_discard:
                 return None
@@ -35,13 +35,13 @@ class GameSystem:
         return card
 
     @staticmethod
-    def _card_soul(card: Card) -> int:
+    def card_soul(card: Card) -> int:
         return card.n_triggers if card.n_triggers <= 2 else 0
 
     # Trigger check rule
     def trigger_check(self) -> int:
-        card = self._reveal_trigger_card()
-        return self._card_soul(card) if card else 0
+        card = self.reveal_trigger_card()
+        return self.card_soul(card) if card else 0
 
     # Twin drive rule
     def twin_drive_check(self) -> int:
@@ -49,9 +49,9 @@ class GameSystem:
             self.trigger_discard.append(self.stock.pop())
         total = 0
         for _ in range(2):
-            card = self._reveal_trigger_card()
+            card = self.reveal_trigger_card()
             if card:
-                total += self._card_soul(card)
+                total += self.card_soul(card)
         return total
 
     # Level up rule
