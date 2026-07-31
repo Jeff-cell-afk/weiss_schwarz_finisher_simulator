@@ -17,7 +17,7 @@ Iteration v3
 - new model for the system : notebook has been divided between modules to separate more efficiently the whole sequence
 - parallelisation has been added to the model to improve efficiency
 
-Iteration v4
+Iteration v4 (current iteration)
 - color and events added to the card designation system (not used yet in calculus, but it'll probably come up at some point)
 - twin drive mechanic implemented (to be improved later)
 
