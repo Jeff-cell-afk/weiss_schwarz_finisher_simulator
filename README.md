@@ -30,7 +30,7 @@ An **occurrence** refers to any source of damage (auto-attacks, card effects, et
 * **Triggers (`/A`, `/T`):** Append `/A` to add a single trigger check, or `/T` for a double trigger check.  
   * *Example:* `BURN(2)/T` (2-damage auto-attack with a double trigger check before resolution).
 * **On-Reveal Conditional (`ONREVEAL`):** Append `ONREVEAL "condition" THEN <occurrence>` after a `/A` or `/T` trigger to resolve an extra occurrence for each revealed trigger card matching the condition, on top of the base burn (and its usual soul-trigger bonus). Requires a trigger suffix — there is no card to inspect without one. Conditions follow the same syntax as `TOPCHECK`/`MILL...IF` (see Command Reference below).
-  * *Example:* `BURN(3)/T ONREVEAL "Character or Event Card" THEN BURN(3)` (3-damage twin-drive attack; for each of the 2 revealed cards that is a character or an event, an extra 2-damage burn is resolved).
+  * *Example:* `BURN(3)/T ONREVEAL "Blue or Yellow Character Card" THEN BURN(3)` (3-damage twin-drive attack; for each of the 2 revealed cards that is a character or an event, an extra 3-damage burn is resolved).
 * **Cost `(COST)`:** Place cost requirements in parentheses before an occurrence.
 
 ---
