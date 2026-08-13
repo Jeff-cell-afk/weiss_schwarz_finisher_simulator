@@ -117,12 +117,12 @@ class GameSystem:
 
     # Burn primitive
 
-    def resolution(self, n: int, trigger: Optional[str]) -> bool:
-        if trigger == "single":
-            n += self.trigger_check()
-        elif trigger == "twin":
-            n += self.twin_drive_check()
+    def reveal_trigger_cards(self, n: int) -> Tuple[int, List[Card]]:
+        cards = [self._reveal_trigger_card() for _ in range(n)]
+        bonus = sum(self.__card_soul(c) for c in cards)
+        return bonus, cards
 
+    def resolution_core(self, n: int) -> bool:
         pile: List[Card] = []
         canceled = False
         while len(pile) < n:
@@ -140,6 +140,14 @@ class GameSystem:
             self.keep_cards(pile)
 
         return canceled
+
+    def resolution(self, n: int, trigger: Optional[str]) -> bool:
+        bonus = 0
+        if trigger == "single":
+            bonus, _ = self.reveal_trigger_cards(1)
+        elif trigger == "twin":
+            bonus, _ = self.reveal_trigger_cards(2)
+        return self.resolution_core(n + bonus)
 
     # Mill primitive
 
