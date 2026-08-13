@@ -185,7 +185,7 @@ class GameSystem:
 
     # StockSwap primitive
 
-    def draw_from_main(self, n: int) -> List[Card]:
+    def recomplete(self, n: int) -> List[Card]:
         drawn: List[Card] = []
         while len(drawn) < n:
             if not self.main_deck:
@@ -198,7 +198,7 @@ class GameSystem:
         n = len(self.main_deck_stock)
         self.discard.extend(self.main_deck_stock)
         self.main_deck_stock.clear()
-        self.main_deck_stock.extend(self.draw_from_main(n))
+        self.main_deck_stock.extend(self.recomplete(n))
 
     def stock_shuffle(self) -> None:
         n = len(self.main_deck_stock)
@@ -209,7 +209,7 @@ class GameSystem:
         self.main_deck.clear()
         self.main_deck.extend(new_main)
 
-        self.main_deck_stock.extend(self.draw_from_main(n))
+        self.main_deck_stock.extend(self.recomplete(n))
 
     def shuffle_all_but_climax_reserve(self, x: int) -> None:
         climax_idx = [i for i, c in enumerate(self.discard) if c.category == "climax"]
