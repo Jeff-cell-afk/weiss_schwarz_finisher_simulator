@@ -132,10 +132,10 @@ class Mill(Effect):
     def resolve(self, gs: "GameSystem") -> bool:
         climax_count, milled = gs.mill(self.n, self.target, self.edge)
         if self.mode == "count":
-            return Occurrence(effect=Burn(climax_count)).resolve(gs)
+            return gs.resolution(climax_count, None)
         if self.mode == "level":
             card = milled[0]
-            return Occurrence(effect=Burn(card.level + self.offset)).resolve(gs)
+            return gs.resolution(card.level + self.offset, None)
         if self.mode == "if":
             card = milled[0]
             assert self.condition is not None and self.then is not None
@@ -221,27 +221,29 @@ class TopCheck(Effect):
         return self.then.max_damage(ctx)
 
 
-@dataclass(frozen=True)
-class StockSwap(Effect):
-    def resolve(self, gs: "GameSystem") -> bool:
-        gs.stock_swap()
-        return False
-    
+class ZeroDamageEffect(Effect):
+    """Base for effects that never contribute to max_damage (stock/shuffle utilities)."""
+
     def max_damage(self, ctx: "BoundContext") -> int:
         return 0
 
+
 @dataclass(frozen=True)
-class StockShuffle(Effect):
+class StockSwap(ZeroDamageEffect):
+    def resolve(self, gs: "GameSystem") -> bool:
+        gs.stock_swap()
+        return False
+
+
+@dataclass(frozen=True)
+class StockShuffle(ZeroDamageEffect):
     def resolve(self, gs: "GameSystem") -> bool:
         gs.stock_shuffle()
-        return False 
-
-    def max_damage(self, ctx: "BoundContext") -> int:
-        return 0 
+        return False
 
 
 @dataclass(frozen=True)
-class ShuffleAll(Effect):
+class ShuffleAll(ZeroDamageEffect):
     x: int
 
     def __post_init__(self):
@@ -251,9 +253,6 @@ class ShuffleAll(Effect):
     def resolve(self, gs: "GameSystem") -> bool:
         gs.shuffle_all_but_climax_reserve(self.x)
         return False
-
-    def max_damage(self, ctx: "BoundContext") -> int:
-        return 0
 
 
 
