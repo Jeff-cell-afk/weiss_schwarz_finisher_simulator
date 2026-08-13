@@ -167,33 +167,38 @@ class GameSystem:
 
     # Shuffle primitive
 
+    def shuffle_into_main(self, moved: List[Card], kept: List[Card]) -> None:
+        self.discard = kept
+        new_main = list(self.main_deck) + moved
+        random.shuffle(new_main)
+        self.main_deck.clear()
+        self.main_deck.extend(new_main)
+
     def shuffle_discard_into_main(self, count: int) -> None:
         eligible_idx = [i for i, c in enumerate(self.discard) if c.category != "climax"]
         chosen_idx = set(random.sample(eligible_idx, min(count, len(eligible_idx))))
         if not chosen_idx:
             return
         moved = [c for i, c in enumerate(self.discard) if i in chosen_idx]
-        self.discard = [c for i, c in enumerate(self.discard) if i not in chosen_idx]
-
-        new_main = list(self.main_deck) + moved
-        random.shuffle(new_main)
-        self.main_deck.clear()
-        self.main_deck.extend(new_main)
+        kept = [c for i, c in enumerate(self.discard) if i not in chosen_idx]
+        self.shuffle_into_main(moved, kept)
 
     # StockSwap primitive
+
+    def draw_from_main(self, n: int) -> List[Card]:
+        drawn: List[Card] = []
+        while len(drawn) < n:
+            if not self.main_deck:
+                self.refresh()
+                continue
+            drawn.append(self.main_deck.pop())
+        return drawn
 
     def stock_swap(self) -> None:
         n = len(self.main_deck_stock)
         self.discard.extend(self.main_deck_stock)
         self.main_deck_stock.clear()
-
-        refilled: List[Card] = []
-        while len(refilled) < n:
-            if not self.main_deck:
-                self.refresh()
-                continue
-            refilled.append(self.main_deck.pop())
-        self.main_deck_stock.extend(refilled)
+        self.main_deck_stock.extend(self.draw_from_main(n))
 
     def stock_shuffle(self) -> None:
         n = len(self.main_deck_stock)
@@ -204,8 +209,7 @@ class GameSystem:
         self.main_deck.clear()
         self.main_deck.extend(new_main)
 
-        refilled: List[Card] = [self.main_deck.pop() for _ in range(n)]
-        self.main_deck_stock.extend(refilled)
+        self.main_deck_stock.extend(self.draw_from_main(n))
 
     def shuffle_all_but_climax_reserve(self, x: int) -> None:
         climax_idx = [i for i, c in enumerate(self.discard) if c.category == "climax"]
@@ -213,12 +217,8 @@ class GameSystem:
         held_idx = set(random.sample(climax_idx, hold_back_count))
 
         moved = [c for i, c in enumerate(self.discard) if i not in held_idx]
-        self.discard = [c for i, c in enumerate(self.discard) if i in held_idx]
-
-        new_main = list(self.main_deck) + moved
-        random.shuffle(new_main)
-        self.main_deck.clear()
-        self.main_deck.extend(new_main)
+        kept = [c for i, c in enumerate(self.discard) if i in held_idx]
+        self.shuffle_into_main(moved, kept)
 
     
     def run(self, occurrences: List[Occurrence]) -> int:
