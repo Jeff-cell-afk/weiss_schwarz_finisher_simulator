@@ -62,7 +62,7 @@ class GameSystem:
         card = self._reveal_trigger_card()
         return self.__card_soul(card)
 
-    # Twin drive rule (custom, outside the CR: 2 trigger checks instead of one)
+    # Twin drive rule
     def twin_drive_check(self) -> int:
         total = 0
         for _ in range(2):
