@@ -26,22 +26,46 @@ class Effect:
         raise NotImplementedError
 
 
+_TRIGGER_CHECK_COUNT = {None: 0, "single": 1, "twin": 2}
+
+
 @dataclass(frozen=True)
 class Burn(Effect):
     n: int
     trigger: Optional[str] = None
+    on_reveal: Optional[Tuple["Condition", "Occurrence"]] = None
 
     def __post_init__(self):
         if self.n < 0:
             raise ValueError(f"Burn.n must be >= 0, got {self.n!r}")
         if self.trigger not in (None, "single", "twin"):
             raise ValueError(f"invalid trigger: {self.trigger!r}")
+        if self.on_reveal is not None and self.trigger is None:
+            raise ValueError(
+                "Burn.on_reveal requires a trigger ('single' or 'twin'): "
+                "ONREVEAL inspects the card(s) revealed by the trigger "
+                "check, so there must be a trigger check to hook into."
+            )
 
     def resolve(self, gs: "GameSystem") -> bool:
-        return gs.resolution(self.n, self.trigger)
+        if self.on_reveal is None:
+            return gs.resolution(self.n, self.trigger)
+
+        condition, then = self.on_reveal
+        n_checks = _TRIGGER_CHECK_COUNT[self.trigger]
+        bonus, cards = gs.reveal_trigger_cards(n_checks)
+        for card in cards:
+            if condition.matches(card):
+                then.resolve(gs)
+        return gs.resolution_core(self.n + bonus)
 
     def max_damage(self, ctx: "BoundContext") -> int:
-        return self.n + _TRIGGER_DAMAGE_BONUS[self.trigger]
+        base = self.n + _TRIGGER_DAMAGE_BONUS[self.trigger]
+        if self.on_reveal is not None:
+            n_checks = _TRIGGER_CHECK_COUNT[self.trigger]
+            _, then = self.on_reveal
+            base += n_checks * then.max_damage(ctx)
+        return base
 
 
 @dataclass(frozen=True)
@@ -222,8 +246,6 @@ class TopCheck(Effect):
 
 
 class ZeroDamageEffect(Effect):
-    """Base for effects that never contribute to max_damage (stock/shuffle utilities)."""
-
     def max_damage(self, ctx: "BoundContext") -> int:
         return 0
 
@@ -331,6 +353,9 @@ def walk_occurrences(occ: "Occurrence", mult: int = 1):
             yield from walk_occurrences(sub, mult)
     elif isinstance(effect, Shuffle):
         yield from walk_occurrences(effect.then, mult)
+    elif isinstance(effect, Burn) and effect.on_reveal is not None:
+        _condition, then = effect.on_reveal
+        yield from walk_occurrences(then, mult * _TRIGGER_CHECK_COUNT[effect.trigger])
     elif isinstance(effect, Mill):
         if effect.mode == "each":
             assert effect.then is not None
@@ -443,10 +468,6 @@ _TOKEN_RE = re.compile(
     re.VERBOSE,
 )
 
-MAX_NESTING_DEPTH = 8
-MAX_SPEC_LENGTH = 500
-
-
 def tokenize(spec: str) -> List[Token]:
     tokens: List[Token] = []
     for m in _TOKEN_RE.finditer(spec):
@@ -512,12 +533,6 @@ class _Parser:
         return occs
 
     def parse_occurrence(self, depth: int = 0) -> Occurrence:
-        if depth > MAX_NESTING_DEPTH:
-            raise ValueError(
-                f"Maximum nesting depth ({MAX_NESTING_DEPTH}) exceeded "
-                f"in {self.original!r}."
-            )
-
         ident = self._peek_ident()
         if ident == "SHUFFLE":
             return self._parse_shuffle(depth, cost_before=0)
@@ -562,7 +577,7 @@ class _Parser:
     def parse_effect(self, depth: int) -> Effect:
         ident = self._peek_ident()
         if ident == "BURN":
-            return self._parse_burn()
+            return self._parse_burn(depth)
         if ident == "ONCANCEL":
             return self._parse_oncancel(depth)
         if ident == "MILL":
@@ -584,7 +599,7 @@ class _Parser:
             f"STOCKSHUFFLE/SHUFFLEALL but got {got} in {self.original!r}"
         )
 
-    def _parse_burn(self) -> Burn:
+    def _parse_burn(self, depth: int = 0) -> Burn:
         self._expect_ident("BURN")
         self._expect("LPAREN")
         n = self._expect_int()
@@ -594,7 +609,17 @@ class _Parser:
             tok = self._advance()
             suffix = tok.value[1].upper()
             trigger = "single" if suffix == "A" else "twin"
-        return Burn(n=n, trigger=trigger)
+
+        on_reveal = None
+        if self._peek_ident() == "ONREVEAL":
+            self._advance()
+            raw = self._expect("STRING").value[1:-1] 
+            condition = parse_condition(raw)
+            self._expect_ident("THEN")
+            then = self.parse_occurrence(depth + 1)
+            on_reveal = (condition, then)
+
+        return Burn(n=n, trigger=trigger, on_reveal=on_reveal)
 
     def _parse_shuffle_all(self) -> ShuffleAll:
         self._expect_ident("SHUFFLEALL")
@@ -628,7 +653,7 @@ class _Parser:
             self._expect("RBRACKET")
             return Mill(n=n, target=target, edge=edge, mode="each", then=then)
         if mode_kw == "IF":
-            raw = self._expect("STRING").value[1:-1]  # strip quotes
+            raw = self._expect("STRING").value[1:-1]  
             condition = parse_condition(raw)
             self._expect_ident("THEN")
             then = self.parse_occurrence(depth + 1)
@@ -644,7 +669,7 @@ class _Parser:
         if self._peek() is None or self._peek_ident() != "IF":
             return TopCheck()
         self._advance()  # IF
-        raw = self._expect("STRING").value[1:-1]  # strip quotes
+        raw = self._expect("STRING").value[1:-1]  
         condition = parse_condition(raw)
         self._expect_ident("THEN")
         then = self.parse_occurrence(depth + 1)
@@ -703,12 +728,6 @@ def parse_condition(text: str) -> Condition:
 
 
 def parse_occurrence(spec: str) -> Occurrence:
-    """Public entry point: parses a single text spec into an Occurrence."""
-    if len(spec) > MAX_SPEC_LENGTH:
-        raise ValueError(
-            f"Spec too long ({len(spec)} chars, max {MAX_SPEC_LENGTH}): "
-            f"likely a copy-paste mistake."
-        )
     check_balanced(spec)
     tokens = tokenize(spec)
     parser = _Parser(tokens, spec)
