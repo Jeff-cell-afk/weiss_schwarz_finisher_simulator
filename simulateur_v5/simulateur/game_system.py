@@ -62,7 +62,7 @@ class GameSystem:
         card = self._reveal_trigger_card()
         return self.__card_soul(card)
 
-    # Twin drive rule
+    # Double trigger check rule
     def twin_drive_check(self) -> int:
         total = 0
         for _ in range(2):
@@ -173,6 +173,20 @@ class GameSystem:
                 climax_count += 1
         return climax_count, milled
 
+    # Scry primitive
+
+    def scry(self, n: int) -> Tuple[int, List[Card]]:
+        count = min(n, len(self.main_deck))
+        revealed = [self.main_deck.pop() for _ in range(count)]
+
+        climax_cards = [c for c in revealed if c.category == "climax"]
+        kept = [c for c in revealed if c.category != "climax"]
+        self.discard.extend(climax_cards)
+        for card in reversed(kept):
+            self.main_deck.append(card)
+
+        return len(climax_cards), revealed
+
     # Shuffle primitive
 
     def shuffle_into_main(self, moved: List[Card], kept: List[Card]) -> None:
@@ -260,6 +274,16 @@ class GameSystem:
                 f"(initial_trigger_count+initial_trigger_stock_count)."
             )
 
+def run_trial_from_decks(main_deck: Deque[Card], trigger_deck: Deque[Card],
+                          trigger_deck_stock: List[Card], main_deck_stock: List[Card],
+                          occurrences: List[Occurrence], check_invariants: bool = False) -> int:
+    state = GameSystem(main_deck, trigger_deck, trigger_deck_stock, main_deck_stock)
+    damage = state.run(occurrences)
+    if check_invariants:
+        state.check_invariant()
+    return damage
+
+
 def run_single_trial(deck_size, climax_n, occurrences: List[Occurrence], pools: Pools,
                       trigger_deck_size, trigger_deck_climax,
                       trigger_deck_stock_size: int = 0,
@@ -275,8 +299,7 @@ def run_single_trial(deck_size, climax_n, occurrences: List[Occurrence], pools: 
         pools.trigger_climax, pools.trigger_non_climax,
         trigger_deck_size, trigger_deck_climax, trigger_deck_stock_size,
     )
-    state = GameSystem(main_deck, trigger_deck, trigger_deck_stock, main_deck_stock)
-    damage = state.run(occurrences)
-    if check_invariants:
-        state.check_invariant()
-    return damage
+    return run_trial_from_decks(
+        main_deck, trigger_deck, trigger_deck_stock, main_deck_stock,
+        occurrences, check_invariants,
+    )
