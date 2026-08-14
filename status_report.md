@@ -17,13 +17,18 @@ Iteration v3
 - new model for the system : notebook has been divided between modules to separate more efficiently the whole sequence
 - parallelisation has been added to the model to improve efficiency
 
-Iteration v4 (current iteration)
-- color and events added to the card designation system (not used yet in calculus, but it'll probably come up at some point)
+Iteration v4
+- color and events added to the card classification system
 - twin drive mechanic implemented (to be improved later)
+
+Iteration v5
+- occurrence structure rewritten, primitives used to build all types of occurrences
+- on-reveal mechanic added to triggers
+- multiple effects added to the parameter list
+- twin drive mechanic upgraded
 
 All parameters to be manually implemented (usage exemple in main.py)
 
 Objectives and future hopes for later (I don't know if I will get there later, but I will try)
-- implementing top deck burns and conditioned damage occurrences in the system
 - implementing restand in the system
-- implementing icy tail damage in the system
+- improving efficiency
