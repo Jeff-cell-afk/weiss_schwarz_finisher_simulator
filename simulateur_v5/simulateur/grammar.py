@@ -277,6 +277,19 @@ class ShuffleAll(ZeroDamageEffect):
         return False
 
 
+@dataclass(frozen=True)
+class Scry(ZeroDamageEffect):
+    n: int
+
+    def __post_init__(self):
+        if self.n < 1:
+            raise ValueError(f"Scry.n must be >= 1, got {self.n!r}")
+
+    def resolve(self, gs: "GameSystem") -> bool:
+        gs.scry(self.n)
+        return False
+
+
 
 
 @dataclass(frozen=True)
@@ -592,11 +605,13 @@ class _Parser:
             return StockShuffle()
         if ident == "SHUFFLEALL":
             return self._parse_shuffle_all()
+        if ident == "SCRY":
+            return self._parse_scry()
         tok = self._peek()
         got = f"{tok.kind}({tok.value!r})" if tok else "end of input"
         raise ValueError(
             f"Expected one of BURN/SHUFFLE/ONCANCEL/MILL/TOPCHECK/STOCKSWAP/"
-            f"STOCKSHUFFLE/SHUFFLEALL but got {got} in {self.original!r}"
+            f"STOCKSHUFFLE/SHUFFLEALL/SCRY but got {got} in {self.original!r}"
         )
 
     def _parse_burn(self, depth: int = 0) -> Burn:
@@ -613,7 +628,7 @@ class _Parser:
         on_reveal = None
         if self._peek_ident() == "ONREVEAL":
             self._advance()
-            raw = self._expect("STRING").value[1:-1] 
+            raw = self._expect("STRING").value[1:-1]  # strip quotes
             condition = parse_condition(raw)
             self._expect_ident("THEN")
             then = self.parse_occurrence(depth + 1)
@@ -627,6 +642,13 @@ class _Parser:
         x = self._expect_int()
         self._expect("RPAREN")
         return ShuffleAll(x=x)
+
+    def _parse_scry(self) -> Scry:
+        self._expect_ident("SCRY")
+        self._expect("LPAREN")
+        n = self._expect_int()
+        self._expect("RPAREN")
+        return Scry(n=n)
 
     def _parse_oncancel(self, depth: int) -> OnCancel:
         self._expect_ident("ONCANCEL")
@@ -653,7 +675,7 @@ class _Parser:
             self._expect("RBRACKET")
             return Mill(n=n, target=target, edge=edge, mode="each", then=then)
         if mode_kw == "IF":
-            raw = self._expect("STRING").value[1:-1]  
+            raw = self._expect("STRING").value[1:-1]  # strip quotes
             condition = parse_condition(raw)
             self._expect_ident("THEN")
             then = self.parse_occurrence(depth + 1)
@@ -669,7 +691,7 @@ class _Parser:
         if self._peek() is None or self._peek_ident() != "IF":
             return TopCheck()
         self._advance()  # IF
-        raw = self._expect("STRING").value[1:-1]  
+        raw = self._expect("STRING").value[1:-1]  # strip quotes
         condition = parse_condition(raw)
         self._expect_ident("THEN")
         then = self.parse_occurrence(depth + 1)
