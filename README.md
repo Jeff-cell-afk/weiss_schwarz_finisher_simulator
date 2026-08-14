@@ -30,7 +30,7 @@ An **occurrence** refers to any source of damage (auto-attacks, card effects, et
 * **Triggers (`/A`, `/T`):** Append `/A` to add a single trigger check, or `/T` for a double trigger check.  
   * *Example:* `BURN(2)/T` (2-damage auto-attack with a double trigger check before resolution).
 * **On-Reveal Conditional (`ONREVEAL`):** Append `ONREVEAL "condition" THEN <occurrence>` after a `/A` or `/T` trigger to resolve an extra occurrence for each revealed trigger card matching the condition, on top of the base burn (and its usual soul-trigger bonus). Requires a trigger suffix — there is no card to inspect without one. Conditions follow the same syntax as `TOPCHECK`/`MILL...IF` (see Command Reference below).
-  * *Example:* `BURN(3)/T ONREVEAL "Blue or Yellow Character Card" THEN BURN(3)` (3-damage twin-drive attack; for each of the 2 revealed cards that is a character or an event, an extra 3-damage burn is resolved).
+  * *Example:* `BURN(3)/T ONREVEAL "Character or Event Card" THEN BURN(3)` (3-damage twin-drive attack; for each of the 2 revealed cards that is a character or an event, an extra 2-damage burn is resolved).
 * **Cost `(COST)`:** Place cost requirements in parentheses before an occurrence.
 
 ---
@@ -46,3 +46,4 @@ An **occurrence** refers to any source of damage (auto-attacks, card effects, et
 | **`ONCANCEL`** | `ONCANCEL[a;b;...] ON x` Attempts to apply $x$. If $x$ is cancelled, applies effects $a, b, \dots$ in sequence. | `ONCANCEL[BURN(1);BURN(1)] ON BURN(3)` |
 | **`STOCKSWAP`** | Moves all cards from the main deck's stock to the discard pile, then puts an equal number of cards from the top of the deck into stock. | `STOCKSWAP` |
 | **`STOCKSHUFFLE`** | Sends all cards from the main deck's stock back to the deck, shuffles it, and puts the same number of cards back into stock. | `STOCKSHUFFLE` |
+| **`SCRY`** | `SCRY(X)` Looks at the top X cards of the main deck (or fewer, if the deck holds less than X — no refresh is triggered to make up the count). All climaxes seen this way go to the discard pile; the remaining cards are put back on top, in their original order. | `SCRY(3)` |
