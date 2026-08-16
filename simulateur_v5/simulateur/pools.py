@@ -60,7 +60,7 @@ def validate_pools(pools: Pools, deck_size_list, climax_list,
         "main_climax": max(climax_list),
         "main_non_climax": max(s - c for s, c in valid_pairs) + main_deck_stock_size,
         "trigger_climax": trigger_deck_climax,
-        "trigger_non_climax": trigger_deck_size - trigger_deck_climax,
+        "trigger_non_climax": (trigger_deck_size - trigger_deck_climax) + trigger_deck_stock_size,
     }
     for field, n_needed in needed.items():
         if pool_sizes[field] < n_needed:
@@ -70,15 +70,3 @@ def validate_pools(pools: Pools, deck_size_list, climax_list,
                 f"the number of copies per card in the corresponding "
                 f"specs."
             )
-
-    trigger_pool_total = pool_sizes["trigger_climax"] + pool_sizes["trigger_non_climax"]
-    trigger_needed_total = trigger_deck_size + trigger_deck_stock_size
-    if trigger_pool_total < trigger_needed_total:
-        raise ValueError(
-            f"The trigger pools ('trigger_climax' + 'trigger_non_climax') "
-            f"only contain {trigger_pool_total} copies in total, but at "
-            f"least {trigger_needed_total} are needed ({trigger_deck_size} "
-            f"for the trigger deck + {trigger_deck_stock_size} for "
-            f"trigger_deck_stock). Increase the number of copies per card "
-            f"in the trigger specs, or reduce trigger_deck_stock_size."
-        )
