@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Damage Simulator — Weiss-like TCG</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+
+<header class="app-header">
+  <p class="eyebrow">Monte Carlo · damage per turn</p>
+  <h1>Damage Simulator</h1>
+  <p>
+    Build your card pool, your effect sequence, and run thousands of simulated
+    trials to estimate the probability of dealing a certain amount of damage in a turn.
+  </p>
+</header>
+
+<main>
+  <section class="card">
+    <h2><span class="step-num">1</span>Card pool</h2>
+    <div id="pools-section"></div>
+  </section>
+
+  <section class="card">
+    <h2><span class="step-num">2</span>Deck configuration</h2>
+    <div id="deck-config-section"></div>
+  </section>
+
+  <section class="card">
+    <h2><span class="step-num">3</span>Effect sequence</h2>
+    <div id="occurrences-section"></div>
+  </section>
+
+  <section class="card">
+    <h2><span class="step-num">4</span>Simulation</h2>
+    <div id="sim-section"></div>
+  </section>
+
+  <section class="card">
+    <h2><span class="step-num">5</span>Results</h2>
+    <div id="results-section"></div>
+  </section>
+</main>
+
+<footer>
+  Everything runs client-side (no data is sent to any server). JS port of the Python
+  engine (grammar / game_system / deck / simulation).
+</footer>
+
+<script src="js/models.js"></script>
+<script src="js/pools.js"></script>
+<script src="js/grammar.js"></script>
+<script src="js/gameSystem.js"></script>
+<script src="js/deck.js"></script>
+<script src="js/simulation.js"></script>
+<script src="js/builder.js"></script>
+<script src="js/app.js"></script>
+</body>
+</html>
