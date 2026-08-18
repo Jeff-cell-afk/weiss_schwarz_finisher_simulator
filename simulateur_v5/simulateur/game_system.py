@@ -82,6 +82,7 @@ class GameSystem:
     # Level up rule
     # While the clock zone holds 7 or more cards, process a batch of 7:
     # move the first non-climax card found in that batch to the level zone, and discard the rest of the batch.
+    # in case there are 7 climaxes in clock zone, one is forced to go into level zone
     def levelup(self) -> None:
         while len(self.clock_zone) >= 7:
             batch = [self.clock_zone.pop(0) for _ in range(7)]
