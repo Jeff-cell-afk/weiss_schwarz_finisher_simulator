@@ -7,6 +7,7 @@ from .models import Card, Pools
 class SystemBrokenError(RuntimeError):
     """Deckout lose condition. Used during the refresh procedure as an emergency system."""
 
+# All the functions used to recreate a damage sequence are written here.
 class GameSystem:
     __slots__ = (
         "main_deck", "discard", "trigger_deck", "trigger_discard",
@@ -16,6 +17,7 @@ class GameSystem:
         "initial_main_stock_count",
     )
 
+    # All card zones and check counts are initialized here
     def __init__(self, main_deck: Deque[Card], trigger_deck: Deque[Card],
                  initial_trigger_stock: Optional[List[Card]] = None,
                  initial_main_stock: Optional[List[Card]] = None):
@@ -35,25 +37,30 @@ class GameSystem:
 
     # Trigger deck structure
 
+    # Safety function to verify the main deck always has a card in it
+    # If both main deck and its discard are simultaneous empty, the simulator is stopped
     def _ensure_trigger_deck(self) -> None:
         if not self.trigger_deck:
             if not self.trigger_discard:
-                raise SystemBrokenError("congrats, you just broke the system")
+                raise SystemBrokenError("You reached the simulation's limit here")
             random.shuffle(self.trigger_discard)
             self.trigger_deck.extend(self.trigger_discard)
             self.trigger_discard.clear()
 
+    # Takes the main deck's top card, uses it for trigger check and puts it into trigger's stock zone
     def _reveal_trigger_card(self) -> Card:
         self._ensure_trigger_deck()
         card = self.trigger_deck.pop()
         self.trigger_deck_stock.append(card)
         return card
 
+    # Looks at the top deck, but lets it on top for later trigger checks
     def peek_trigger_top(self) -> Card:
         self._ensure_trigger_deck()
         return self.trigger_deck[-1]
 
     @staticmethod
+    # Failsafe function here, actually there is no card in the game that has more than two soul triggers in it
     def __card_soul(card: Card) -> int:
         return card.n_triggers if card.n_triggers <= 2 else 0
 
@@ -73,19 +80,22 @@ class GameSystem:
     # Damage structure
 
     # Level up rule
+    # While the clock zone holds 7 or more cards, process a batch of 7:
+    # move the first non-climax card found in that batch to the level zone, and discard the rest of the batch.
     def levelup(self) -> None:
         while len(self.clock_zone) >= 7:
-            batch = self.clock_zone[:7]
-            del self.clock_zone[:7]
-            idx = next((i for i, c in enumerate(batch) if c.category != "climax"), None)
-            if idx is not None:
-                self.level_zone.append(batch.pop(idx))
+            batch = [self.clock_zone.pop(0) for _ in range(7)]
+            level_card_idx = next(
+            (i for i, card in enumerate(batch) if card.category != "climax"),
+            None,)
+            if level_card_idx is not None:
+                self.level_zone.append(batch.pop(level_card_idx))
             self.discard.extend(batch)
 
     # Refresh penalty rule
     def refresh(self) -> None:
         if not self.discard:
-            raise SystemBrokenError("congrats, you just reached the deckout lose condition")
+            raise SystemBrokenError("You reached the simulation's limit here")
         new_deck = self.discard[:]
         self.discard.clear()
         random.shuffle(new_deck)
