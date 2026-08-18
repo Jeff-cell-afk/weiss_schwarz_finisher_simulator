@@ -2,6 +2,7 @@ from typing import List
 
 from .models import Card, Pools, _is_valid_positive_int
 
+# Pool construction function, checks here with positive card count (void and negative numbers aren't allowed)
 def expand_pool(card_counts: dict) -> List[Card]:
     pool = []
     for card, count in card_counts.items():
@@ -13,6 +14,7 @@ def expand_pool(card_counts: dict) -> List[Card]:
         pool.extend([card] * count)
     return pool
 
+# Initial pool building function
 def build_pools(main_non_climax_specs, main_climax_specs,
                 trigger_non_climax_specs, trigger_climax_specs) -> Pools:
     return Pools(
@@ -22,6 +24,8 @@ def build_pools(main_non_climax_specs, main_climax_specs,
         trigger_non_climax=expand_pool(trigger_non_climax_specs),
     )
 
+# To avoid error propagation later on, we first need to verify if all the informations added by the user are coherent
+# Explicit value-error messages will guide the user in case problems arise
 def validate_pools(pools: Pools, deck_size_list, climax_list,
                     trigger_deck_size, trigger_deck_climax,
                     trigger_deck_stock_size: int = 0,
