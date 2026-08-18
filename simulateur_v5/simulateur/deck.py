@@ -1,11 +1,12 @@
 import random
 from collections import deque
 from typing import Deque, List, Sequence, Tuple
-
 import numpy as np
 
 from .models import Card
 
+# Once the cards are defined and the card pools have been set, ths function will draw from respective pools to build the appropriate decks
+# To eliminate the confirmation bias regarding deck composition, we randomly build one deck for each trial
 def _build_deck_and_stock(climax_pool, non_climax_pool, deck_size, climax_n,
                            stock_size: int, two_step: bool) -> Tuple[Deque[Card], List[Card]]:
     n_climax = len(climax_pool)
@@ -77,8 +78,6 @@ def batch_build_main_decks(climax_pool: Sequence[Card], non_climax_pool: Sequenc
                             rng: np.random.Generator, stock_size: int = 0) -> Tuple[np.ndarray, np.ndarray]:
     return _batch_build_deck_and_stock(climax_pool, non_climax_pool, deck_size,
                                         climax_n, n_trials, rng, stock_size)
-
-
 def batch_build_trigger_decks(climax_pool: Sequence[Card], non_climax_pool: Sequence[Card],
                                deck_size: int, climax_n: int, n_trials: int,
                                rng: np.random.Generator, stock_size: int = 0) -> Tuple[np.ndarray, np.ndarray]:
