@@ -2,6 +2,8 @@
 
 A Python-based simulation engine for Weiss Schwarz, optimized for execution within Jupyter Notebooks.
 
+![Tests](https://github.com/Jeff-cell-afk/weiss_schwarz_finisher_simulator/actions/workflows/tests.yml/badge.svg)
+
 ## Prerequisites & Setup
 
 * **Python Dependencies:** Install the required modules listed in `requirements.txt`.
