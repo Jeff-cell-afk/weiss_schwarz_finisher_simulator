@@ -12,6 +12,7 @@ from .grammar import (
 )
 from .game_system import GameSystem, run_single_trial, run_trial_from_decks, SystemBrokenError
 from .simulation import generate_table, SimulationConfig
+from .comparison import compare_occurrences_paired, PairedComparisonResult
 
 __all__ = [
     "Card", "Pools", "categories", "colors",
@@ -22,7 +23,7 @@ __all__ = [
     "Scry", "Shuffle", "ShuffleAll", "StockShuffle", "StockSwap", "TopCheck",
     "check_balanced", "max_possible_damage", "max_possible_stock_gain",
     "parse_condition", "parse_occurrence", "parse_occurrences", "tokenize",
-    "validate_occurrence_costs",
+    "validate_occurrence_costs", "compare_occurrences_paired", "PairedComparisonResult",
     "GameSystem", "run_single_trial", "run_trial_from_decks", "SystemBrokenError",
     "generate_table", "SimulationConfig",
     ]
